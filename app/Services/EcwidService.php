@@ -104,4 +104,15 @@ class EcwidService
             return ['error' => 'Request failed', 'message' => $e->getMessage()];
         }
     }
+
+
+    public function decryptData($encryptedData)
+    {
+        $decryptionKey = env('ECWID_SECRET_TOKEN');
+        
+        // Ensure IV is correctly set, e.g., passed along or set as default
+        $iv = env('ECWID_DECRYPTION_IV'); // Example IV from .env
+        
+        return openssl_decrypt($encryptedData, 'aes-256-cbc', $decryptionKey, 0, $iv);
+    }
 }

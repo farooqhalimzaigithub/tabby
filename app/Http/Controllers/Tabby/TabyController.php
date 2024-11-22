@@ -197,4 +197,52 @@ class TabyController extends Controller
 
       return redirect()->route('order.failure')->with('error', 'Payment failed');
   }
+
+
+
+  //   ====================Ecwid =============================
+public function receiveEncryptedData(Request $request)
+{
+    // Assuming Ecwid sends encrypted data in the request body
+    $encryptedData = $request->getContent(); // Retrieve the raw encrypted data
+
+    // Decrypt the data (using a method from your EcwidService or similar)
+    $decryptedData = $this->ecwidService->decryptData($encryptedData);
+
+    // Process the decrypted data (assuming it's an order object)
+    if ($decryptedData) {
+        // Example: validate and process order data
+        $orderId = $decryptedData['order_id'] ?? null;
+
+        if (!$orderId) {
+            return response()->json(['error' => 'Order ID is missing'], 400);
+        }
+
+        // Fetch the order details
+        $orderDetails = $this->ecwidService->getOrder($orderId);
+
+        // If order exists, proceed with the next steps (e.g., creating Tabby session)
+        if ($orderDetails) {
+            // Pass the decrypted order data to your TabbyService for session creation
+            $tabbyResponse = $this->tabyService->createCheckoutSession($orderDetails);
+
+            if (isset($tabbyResponse['error']) && $tabbyResponse['error']) {
+                return response()->json(['error' => 'Tabby session creation failed'], 500);
+            }
+
+            // Assuming successful response from Tabby
+            $webUrl = $tabbyResponse['web_url'] ?? null;
+
+            if ($webUrl) {
+                return response()->json(['redirect_url' => $webUrl], 200);
+            }
+
+            return response()->json(['error' => 'Web URL not found'], 400);
+        }
+
+        return response()->json(['error' => 'Order not found'], 404);
+    }
+
+    return response()->json(['error' => 'Failed to decrypt data'], 400);
+}
 }

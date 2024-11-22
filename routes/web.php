@@ -47,3 +47,5 @@ Route::get('/order/failure', function () {
 
 
 
+// =====================Ecwid request======================
+Route::post('/api/receive-ecwid-encrypted-data', [TabbyController::class, 'receiveEncryptedData']);
